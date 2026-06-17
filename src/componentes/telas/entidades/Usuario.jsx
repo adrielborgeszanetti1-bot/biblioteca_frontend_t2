@@ -32,6 +32,7 @@ function Usuario() {
     const [objeto, setObjeto] = useState(estadoInicial);
     const [carregando, setCarregando] = useState(true);
     const [emailOriginal, setEmailOriginal] = useState("");
+    const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
     useEffect(() => {
         const carregar = async () => {
@@ -41,6 +42,7 @@ function Usuario() {
                 if (admin) {
                     const dados = await getUsuariosAPI();
                     setListaObjetos(dados);
+                    setMostrarFormulario(false);
                 } else if (usuarioLogado?.email) {
                     const dados = await getUsuarioPorEmailAPI(usuarioLogado.email);
                     setObjeto({
@@ -82,6 +84,7 @@ function Usuario() {
             } else if (admin) {
                 const dados = await getUsuariosAPI();
                 setListaObjetos(dados);
+                setMostrarFormulario(false);
             } else {
                 logout();
                 navigate("/login");
@@ -98,7 +101,14 @@ function Usuario() {
         e.preventDefault();
 
         try {
-            const respostaAPI = await alterarUsuarioAPI(objeto, emailOriginal || objeto.email);
+            // Admins can edit other users including their tipo, but must not change their own tipo
+            const payload = { ...objeto };
+            if (admin && (emailOriginal === usuarioLogado?.email)) {
+                // Prevent admin from changing their own privilege/type
+                delete payload.tipo;
+            }
+
+            const respostaAPI = await alterarUsuarioAPI(payload, emailOriginal || objeto.email);
             setAlerta({
                 status: respostaAPI.status,
                 message: respostaAPI.message
@@ -119,6 +129,13 @@ function Usuario() {
                         token: respostaAPI.token
                     });
                 }
+
+                if (admin) {
+                    // refresh list and return to table view
+                    const dados = await getUsuariosAPI();
+                    setListaObjetos(dados);
+                    setMostrarFormulario(false);
+                }
             }
         } catch (err) {
             setAlerta({
@@ -137,7 +154,33 @@ function Usuario() {
         ? {
             alerta,
             listaObjetos,
-            remover
+            remover,
+            selecionar: (u) => {
+                setObjeto({
+                    nome: u.nome || "",
+                    email: u.email || "",
+                    telefone: u.telefone || "",
+                    senha: "",
+                    tipo: u.tipo || ""
+                });
+                setEmailOriginal(u.email || "");
+                setMostrarFormulario(true);
+            },
+            mostrarFormulario,
+            setMostrarFormulario,
+            objeto,
+            setObjeto,
+            acaoCadastrar,
+            handleChange,
+            emailOriginal,
+            usuarioLogado,
+            voltar: () => {
+                setObjeto(estadoInicial);
+                setEmailOriginal("");
+                setMostrarFormulario(false);
+            },
+            setListaObjetos,
+            admin
         }
         : {
             alerta,
@@ -151,7 +194,7 @@ function Usuario() {
     return (
         <UsuarioContext.Provider value={valorContexto}>
             <Carregando carregando={carregando}>
-                {admin ? <UsuarioTabela /> : <UsuarioFormulario />}
+                {admin ? (mostrarFormulario ? <UsuarioFormulario /> : <UsuarioTabela />) : <UsuarioFormulario />}
             </Carregando>
         </UsuarioContext.Provider>
     );
