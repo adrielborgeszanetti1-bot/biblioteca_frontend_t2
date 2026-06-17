@@ -10,14 +10,18 @@ function UsuarioFormulario() {
         acaoCadastrar,
         alerta,
         remover,
-        emailOriginal
+        emailOriginal,
+        admin,
+        mostrarFormulario,
+        voltar,
+        usuarioLogado
     } = useContext(UsuarioContext);
 
     return (
         <div className="container py-4">
             <div className="row justify-content-center">
                 <div className="col-12 col-lg-8">
-                    <h1 className="mb-4">Meu cadastro</h1>
+                    <h1 className="mb-4">{admin && mostrarFormulario ? "Editar usuário" : "Meu cadastro"}</h1>
 
                     <Alerta alerta={alerta} />
 
@@ -76,6 +80,23 @@ function UsuarioFormulario() {
                                     Deixe em branco para manter a senha atual.
                                 </div>
                             </Col>
+
+                            {admin && mostrarFormulario && (
+                                <Col md={6}>
+                                    <FloatingLabel label="Tipo" className="mb-3">
+                                        <Form.Select
+                                            name="tipo"
+                                            value={objeto.tipo || ""}
+                                            onChange={handleChange}
+                                            disabled={emailOriginal === usuarioLogado?.email}
+                                        >
+                                            <option value="">Selecione</option>
+                                            <option value="A">A</option>
+                                            <option value="U">U</option>
+                                        </Form.Select>
+                                    </FloatingLabel>
+                                </Col>
+                            )}
                         </Row>
 
                         <div className="d-flex gap-2">
@@ -89,6 +110,11 @@ function UsuarioFormulario() {
                             >
                                 Excluir minha conta
                             </Button>
+                            {admin && mostrarFormulario && (
+                                <Button variant="secondary" type="button" onClick={voltar}>
+                                    Voltar
+                                </Button>
+                            )}
                         </div>
                     </Form>
                 </div>
