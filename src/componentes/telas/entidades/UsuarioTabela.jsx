@@ -9,7 +9,8 @@ function UsuarioTabela() {
     const {
         alerta,
         listaObjetos,
-        remover
+        remover,
+        selecionar
     } = useContext(UsuarioContext);
 
     return (
@@ -41,6 +42,14 @@ function UsuarioTabela() {
                         {listaObjetos.map((obj) => (
                             <tr key={obj.email}>
                                 <td align="center">
+                                    <Button
+                                        variant="warning"
+                                        onClick={() => selecionar(obj)}
+                                        title="Editar usuário"
+                                        className="me-2"
+                                    >
+                                        <i className="bi bi-pencil"></i>
+                                    </Button>
                                     <Button
                                         variant="danger"
                                         onClick={() => remover(obj.email)}
